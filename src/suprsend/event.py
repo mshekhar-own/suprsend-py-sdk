@@ -1,18 +1,19 @@
 import json
-import uuid
 import time
-from datetime import datetime, timezone
+import uuid
+from datetime import datetime
+from datetime import timezone
+from typing import Dict
+
 import requests
-from typing import List, Dict
 
-from .constants import (
-    HEADER_DATE_FMT,
-    SINGLE_EVENT_MAX_APPARENT_SIZE_IN_BYTES, SINGLE_EVENT_MAX_APPARENT_SIZE_IN_BYTES_READABLE,
-)
 from .attachment import get_attachment_json
+from .constants import HEADER_DATE_FMT
+from .constants import SINGLE_EVENT_MAX_APPARENT_SIZE_IN_BYTES
+from .constants import SINGLE_EVENT_MAX_APPARENT_SIZE_IN_BYTES_READABLE
 from .signature import get_request_signature
-from .utils import (validate_track_event_schema, get_apparent_event_size, )
-
+from .utils import get_apparent_event_size
+from .utils import validate_track_event_schema
 
 RESERVED_EVENT_NAMES = [
     "$identify",
@@ -127,7 +128,7 @@ class EventCollector:
         event_dict, event_size = event.get_final_json(self.config, is_part_of_bulk=False)
         return self.send(event_dict)
 
-    def send(self, event: Dict) -> Dict:
+    def send(self, event: Dict, timeout: int = 10) -> Dict:
         try:
             headers = {**self.__headers, **self.__dynamic_headers()}
             # Based on whether signature is required or not, add Authorization header
@@ -141,7 +142,8 @@ class EventCollector:
             # -----
             resp = requests.post(self.__url,
                                  data=content_txt.encode('utf-8'),
-                                 headers=headers)
+                                 headers=headers,
+                                 timeout=timeout)
         except Exception as ex:
             error_str = ex.__str__()
             return {

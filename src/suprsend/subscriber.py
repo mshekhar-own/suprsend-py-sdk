@@ -1,17 +1,17 @@
 import json
-import uuid
 import time
-from datetime import datetime, timezone
+import uuid
+from datetime import datetime
+from datetime import timezone
+
 import requests
 
-from .constants import (
-    HEADER_DATE_FMT,
-    IDENTITY_SINGLE_EVENT_MAX_APPARENT_SIZE_IN_BYTES,
-    IDENTITY_SINGLE_EVENT_MAX_APPARENT_SIZE_IN_BYTES_READABLE,
-)
+from .constants import HEADER_DATE_FMT
+from .constants import IDENTITY_SINGLE_EVENT_MAX_APPARENT_SIZE_IN_BYTES
+from .constants import IDENTITY_SINGLE_EVENT_MAX_APPARENT_SIZE_IN_BYTES_READABLE
 from .signature import get_request_signature
-from .utils import (get_apparent_identity_event_size, )
 from .subscriber_helper import _SubscriberInternalHelper
+from .utils import (get_apparent_identity_event_size, )
 
 
 class SubscriberFactory:
@@ -129,7 +129,7 @@ class Subscriber:
         # ------
         return warnings_list
 
-    def save(self):
+    def save(self, timeout: int = 10):
         try:
             self.validate_body(is_part_of_bulk=False)
             headers = self.__get_headers()
@@ -149,7 +149,8 @@ class Subscriber:
             # -----
             resp = requests.post(self.__url,
                                  data=content_txt.encode('utf-8'),
-                                 headers=headers)
+                                 headers=headers,
+                                 timeout=timeout)
         except Exception as ex:
             error_str = ex.__str__()
             return {
